@@ -13,20 +13,28 @@ parser.add_argument('-n', '--new', action='store', nargs='+', help='Añade una n
 args = parser.parse_args()
 
 
-# Funcion para mostrar formateada el archivo csv
-def mostrar_matiz():
+# Con esto se lee el archivo csv
+archivo_csv = args.archivo_csv
 
-    # Con esto se lee el archivo csv
-    archivo_csv = sys.argv[1]
+matriz = [] # Creo un lista vacia para añadirle el resot de listas  
 
+def leer_matriz():
     # Abro el archivo csv y guardo los valores en una matriz(lista de listas)
     with open(archivo_csv, 'r', newline='', encoding='utf-8-sig') as fcsv:
-        reader = csv.reader(fcsv)
-        matriz = [] # Creo un lista vacia para añadirle el resot de listas   
+        reader = csv.reader(fcsv) 
         for row in reader:
             matriz.append(row)
 
-    col = [0] * len(matriz[0]) #Inicializo el vector de tamaños maximos de las columnas
+
+
+# Funcion para mostrar formateada el archivo csv
+def mostrar_matiz():
+
+    if len(matriz) == 0:
+        print('Tabla vacia.')
+        exit(1)
+
+    col = [0] * len(matriz[0]) # Inicializo el vector de tamaños maximos de las columnas
 
     # Recorro la matriz por columans y saco su tamaño máximo
     for j in range(len(matriz[0])):
@@ -49,25 +57,36 @@ def mostrar_matiz():
         print('|'+'|'.join(matriz[i])+'|')
 
 
+def añadir_linea(nueva_linea):
+    
+    # Compruebo si termina en un retorno de carro la última línea y sino agrega uno.
+    with open(archivo_csv, 'r+b') as fcsv:
+        fcsv.seek(0, 2) # Mover el cursor al final del archivo
+        if fcsv.tell() > 0: # Compruebo que el archivo no está vacio
+            fcsv.seek(-1, 2) # Muevo el cursor al último byte
+            ultimo_caracter = fcsv.read(1)
+            if ultimo_caracter != b'\n':  # Si el último byte no es un retorno de carro
+                fcsv.write(b'\n')  # Escribir un retorno de carro
 
+            
+
+    # Abro el archivo csv y guardo los valores en una matriz(lista de listas)
+    with open(archivo_csv, 'a', newline='', encoding='utf-8-sig') as fcsv:
+        writer = csv.writer(fcsv, delimiter=',')
+        for i in nueva_linea:
+            linea_separada=i.split(',')
+            writer.writerow(linea_separada)
+        
 
 
 if not args.show and not args.new:
-    control = 1
+    leer_matriz()
+    mostrar_matiz()
 elif args.show and not args.new:
-    control = 1
+    leer_matriz()
+    mostrar_matiz()
 elif not args.show and args.new:
-    control = 2
+    leer_matriz()
+    añadir_linea(args.new)
 else:
-    print('No pueden estar los dos argumentos a la vez')
-
-
-
-
-match control:
-    case 1:
-        mostrar_matiz()
-    case 2:
-        print('Por implementar')
-    case _:
-        print('Opcion por defecto')
+    print('No pueden estar las dos flags a la vez')
